@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React from "react";
+import { useForm, Head } from '@inertiajs/react';
 
 const Registration = () => {
-  const [formData, setFormData] = useState({
+  const { data, setData, post, processing, errors } = useForm({
     id: "",
     surname: "",
     otherNames: "",
@@ -13,40 +14,24 @@ const Registration = () => {
     photo: null,
   });
 
-  const [errors, setErrors] = useState({});
-
   const handleChange = (e) => {
     const { name, value, files } = e.target;
 
     if (name === "photo") {
-      setFormData({ ...formData, photo: files[0] });
+      setData({ ...data, photo: files[0] });
     } else {
-      setFormData({ ...formData, [name]: value });
+      setData({ ...data, [name]: value });
     }
-
-    // Clear error when field changes
-    setErrors({ ...errors, [name]: "" });
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Validate fields
-    const newErrors = {};
-    if (!formData.id) newErrors.id = "ID number is required";
-    if (!formData.surname) newErrors.surname = "Surname is required";
-    if (!formData.otherNames) newErrors.otherNames = "Additional names are required";
-    if (!formData.phone) newErrors.phone = "Phone number is required";
-    if (!formData.dob) newErrors.dob = "Date of birth is required";
-    if (!formData.gender) newErrors.gender = "Gender is required";
-    if (!formData.leader) newErrors.leader = "Are you an elected leader?";
-    if (!formData.photo) newErrors.photo = "Photo is required";
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-    } else {
-      console.log("Form submitted successfully:", formData);
-    }
+    post(route('members.store'), {
+      preserveScroll: true,
+      onSuccess: () => {
+        alert('Registration successful!');
+      },
+    });
   };
 
   return (
@@ -151,7 +136,7 @@ const Registration = () => {
                       label: "Email",
                       type: "email",
                       placeholder: "example@email.com",
-                      error: null,
+                      error: errors.email,
                     },
                   ].map((field) => (
                     <div key={field.id} className="flex flex-col">
@@ -163,12 +148,13 @@ const Registration = () => {
                         name={field.id}
                         type={field.type}
                         placeholder={field.placeholder || ""}
+                        value={data[field.id]}
+                        onChange={handleChange}
                         className={`border rounded-md p-2 focus:outline-none focus:ring ${
                           field.error
                             ? "border-red-500 focus:ring-red-300"
                             : "border-gray-300 focus:ring-gray-300"
                         }`}
-                        onChange={handleChange}
                       />
                       {field.error && (
                         <span className="text-sm text-red-500">{field.error}</span>
@@ -184,12 +170,13 @@ const Registration = () => {
                     <select
                       id="gender"
                       name="gender"
+                      value={data.gender}
+                      onChange={handleChange}
                       className={`border rounded-md p-2 focus:outline-none focus:ring ${
                         errors.gender
                           ? "border-red-500 focus:ring-red-300"
                           : "border-gray-300 focus:ring-gray-300"
                       }`}
-                      onChange={handleChange}
                     >
                       <option value="">Select Gender</option>
                       <option value="male">Male</option>
@@ -200,17 +187,15 @@ const Registration = () => {
                       <span className="text-sm text-red-500">{errors.gender}</span>
                     )}
                   </div>
-
-                  {/* Leader */}
-
                 </div>
                 {/* Submit Button */}
                 <div className="flex justify-end">
                   <button
                     type="submit"
+                    disabled={processing}
                     className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-red-600 focus:outline-none focus:ring focus:ring-blue-300"
                   >
-                    Submit
+                    {processing ? 'Submitting...' : 'Submit'}
                   </button>
                 </div>
               </div>
